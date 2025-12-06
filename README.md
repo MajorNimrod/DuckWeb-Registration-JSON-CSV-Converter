@@ -9,6 +9,8 @@ This tool converts the **DuckWeb weekly registration JSON** (the data behind you
 
 No JavaScript knowledge required. Users only need to **download one file from their browser** and run **one Python command**.
 
+**NOTE: I created this for the purpose of club member and staff schedule management for the game dev UO club. I am not making any money off of this. I am not modifying any data on the registration page, and this is all accessed through DevOps. If the company who made the tool or the school wants to take this down, please send me an email.**
+
 ---
 
 ## What This Produces
