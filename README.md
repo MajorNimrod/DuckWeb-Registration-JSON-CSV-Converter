@@ -128,3 +128,4 @@ Title cleaning:
 ## Common Issues
 
 ### “Excel shows `=+Dis` as a formula”
+### fixed double opening file explorer on import
