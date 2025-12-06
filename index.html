@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DuckWeb Schedule → CSV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #050816;
+      --card-bg: #0f172a;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #f97373;
+      --radius-lg: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 55%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 780px;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 24px;
+      box-shadow:
+        0 18px 60px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(148, 163, 184, 0.1);
+      padding: 24px 24px 20px;
+      backdrop-filter: blur(16px);
+    }
+
+    @media (min-width: 768px) {
+      .app {
+        padding: 28px 32px 24px;
+      }
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h1 span.logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #f9fafb 0, #38bdf8 35%, #0ea5e9 100%);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+      flex-shrink: 0;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .chip {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.10) 0, var(--card-bg) 35%, #020617 100%);
+      border-radius: var(--radius-lg);
+      padding: 18px 16px 16px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      margin-bottom: 16px;
+    }
+
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    @media (min-width: 640px) {
+      .steps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .steps ol {
+      padding-left: 18px;
+      margin: 6px 0 0;
+    }
+
+    .steps li {
+      margin-bottom: 4px;
+    }
+
+    .upload-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 720px) {
+      .upload-card {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .dropzone {
+      position: relative;
+      border-radius: var(--radius-lg);
+      border: 1px dashed rgba(148, 163, 184, 0.8);
+      padding: 18px 16px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    .dropzone.hover {
+      border-color: var(--accent);
+      background: rgba(15, 23, 42, 0.98);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35);
+    }
+
+    .drop-main {
+      font-size: 0.9rem;
+    }
+
+    .drop-main span.primary {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .drop-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .drop-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .side-info {
+      border-radius: var(--radius-lg);
+      background: radial-gradient(circle at top right, var(--accent-soft) 0, rgba(15, 23, 42, 0.95) 45%);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      padding: 12px 12px 10px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .side-info strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 16px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      color: #0b1120;
+      box-shadow: 0 10px 24px rgba(56, 189, 248, 0.45);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-primary:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.55);
+    }
+
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--muted);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(30, 64, 175, 0.6);
+      color: var(--text);
+    }
+
+    .status {
+      min-height: 20px;
+      font-size: 0.82rem;
+      margin-bottom: 8px;
+    }
+
+    .status span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .status-ok {
+      color: #bbf7d0;
+      background: rgba(22, 163, 74, 0.18);
+      border: 1px solid rgba(34, 197, 94, 0.5);
+    }
+
+    .status-error {
+      color: #fecaca;
+      background: rgba(220, 38, 38, 0.18);
+      border: 1px solid rgba(248, 113, 113, 0.6);
+    }
+
+    .status-muted {
+      color: var(--muted);
+      background: rgba(31, 41, 55, 0.9);
+      border: 1px dashed rgba(148, 163, 184, 0.7);
+    }
+
+    .preview {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      padding: 10px 10px 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      max-height: 140px;
+      overflow: auto;
+      white-space: pre;
+    }
+
+    .preview-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .footer {
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .footer a {
+      color: #93c5fd;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="title-group">
+        <h1><span class="logo-dot"></span>DuckWeb Schedule → CSV</h1>
+        <div class="subtitle">
+          Drop your <code>.json</code> or <code>.har</code> from the registration page and get a clean CSV.
+        </div>
+      </div>
+      <div class="chip">Client-side • No data leaves your browser</div>
+    </header>
+
+    <section class="card">
+      <h2>How it works</h2>
+      <p>This tool converts your DuckWeb registration data into a spreadsheet-friendly CSV.</p>
+      <div class="steps">
+        <div>
+          <strong>1. Export from DuckWeb</strong>
+          <ol>
+            <li>Open your weekly schedule / registration page</li>
+            <li>Press <strong>F12</strong> → <em>Network</em> tab</li>
+            <li>Refresh page, filter by <strong>Fetch/XHR</strong></li>
+            <li>Right-click the JSON request → <strong>“Save all as HAR with content…”</strong></li>
+          </ol>
+        </div>
+        <div>
+          <strong>2. Convert here</strong>
+          <ol>
+            <li>Select your <code>.har</code> or raw <code>.json</code></li>
+            <li>Click <strong>Convert to CSV</strong></li>
+            <li>Open the downloaded <code>schedule.csv</code> in Excel / Sheets</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="upload-card">
+      <label class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" class="file-input" accept=".har,.json,application/json" />
+        <div class="drop-main">
+          <span class="primary">Click to choose a file</span> or drag & drop
+        </div>
+        <div class="drop-sub">Use <code>schedule.har</code> (recommended) or raw registration <code>.json</code>.</div>
+        <div class="drop-hint" id="fileNameHint">No file selected yet.</div>
+      </label>
+
+      <div class="side-info">
+        <div><strong>What this does:</strong></div>
+        <ul style="margin: 4px 0 0 18px; padding: 0;">
+          <li>Groups by CRN (one row per course)</li>
+          <li>Filters out long exam-style blocks (&gt;= 119 minutes)</li>
+          <li>Cleans titles like <code>+ Dis</code> / <code>+ Lab</code> so Excel doesn’t treat them as formulas</li>
+          <li>Formats times like <code>Mon 1:00 PM-1:50 PM</code></li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" type="button" id="resetBtn">Reset</button>
+      <button class="btn btn-primary" type="button" id="convertBtn" disabled>
+        Convert to CSV
+      </button>
+    </div>
+
+    <div class="status" id="status">
+      <span class="status-muted">Waiting for a <code>.har</code> or <code>.json</code> file…</span>
+    </div>
+
+    <div class="preview">
+      <div class="preview-heading">
+        <span>CSV Preview (first lines)</span>
+        <span id="previewMeta">0 courses · 0 lines</span>
+      </div>
+      <pre id="previewText"># CSV preview will appear here after conversion.</pre>
+    </div>
+
+    <footer class="footer">
+      <span>All processing happens locally in your browser.</span>
+      <span>Built for DuckWeb-style registration JSON.&nbsp;</span>
+    </footer>
+  </div>
+
+  <script>
+    // --- Config ---
+    const MAX_DURATION_MINUTES = 119;
+    const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("fileInput");
+    const convertBtn = document.getElementById("convertBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const statusEl = document.getElementById("status");
+    const fileNameHint = document.getElementById("fileNameHint");
+    const previewText = document.getElementById("previewText");
+    const previewMeta = document.getElementById("previewMeta");
+
+    let selectedFile = null;
+    let lastCsv = "";
+    let lastCourseCount = 0;
+
+    function setStatus(message, type) {
+      statusEl.innerHTML = "";
+      const span = document.createElement("span");
+      if (type === "ok") span.className = "status-ok";
+      else if (type === "error") span.className = "status-error";
+      else span.className = "status-muted";
+      span.textContent = message;
+      statusEl.appendChild(span);
+    }
+
+    function resetState() {
+      selectedFile = null;
+      lastCsv = "";
+      lastCourseCount = 0;
+      fileInput.value = "";
+      fileNameHint.textContent = "No file selected yet.";
+      convertBtn.disabled = true;
+      setStatus("Waiting for a .har or .json file…", "muted");
+      previewText.textContent = "# CSV preview will appear here after conversion.";
+      previewMeta.textContent = "0 courses · 0 lines";
+    }
+
+    resetBtn.addEventListener("click", resetState);
+
+    // Drag & drop handling
+    ["dragenter", "dragover"].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add("hover");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove("hover");
+      });
+    });
+
+    dropzone.addEventListener("click", () => fileInput.click());
+
+    dropzone.addEventListener("drop", (e) => {
+      const dt = e.dataTransfer;
+      const file = dt.files && dt.files[0];
+      if (file) {
+        handleFileSelected(file);
+      }
+    });
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        handleFileSelected(file);
+      }
+    });
+
+    function handleFileSelected(file) {
+      selectedFile = file;
+      fileNameHint.textContent = `Selected: ${file.name}`;
+      convertBtn.disabled = false;
+      setStatus("File ready. Click “Convert to CSV” to process.", "ok");
+    }
+
+    // --- Core logic ---
+
+    function normalizeIsoOffset(str) {
+      // Turn 2025-12-02T10:00:37-0800 into 2025-12-02T10:00:37-08:00
+      const m = str.match(/([+-]\d{2})(\d{2})$/);
+      if (m) {
+        return str.replace(/([+-]\d{2})(\d{2})$/, `${m[1]}:${m[2]}`);
+      }
+      return str;
+    }
+
+    function parseDate(str) {
+      return new Date(normalizeIsoOffset(str));
+    }
+
+    function formatTime(dt) {
+      let h = dt.getHours();
+      const m = dt.getMinutes().toString().padStart(2, "0");
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12;
+      if (h === 0) h = 12;
+      return `${h}:${m} ${ampm}`;
+    }
+
+    function shouldIncludeMeeting(e) {
+      const start = parseDate(e.start);
+      const end = parseDate(e.end);
+      const durationMinutes = (end - start) / (1000 * 60);
+      return durationMinutes < MAX_DURATION_MINUTES;
+    }
+
+    function cleanTitle(rawTitle, subject, courseNumber) {
+      let t = (rawTitle || "").trim();
+      if (t.startsWith("+")) {
+        const rest = t.slice(1).trim();
+        if (/^dis/i.test(rest)) {
+          return `${subject} ${courseNumber} Discussion`;
+        }
+        if (/^lab/i.test(rest)) {
+          return `${subject} ${courseNumber} Lab`;
+        }
+        return rest;
+      }
+      return t;
+    }
+
+    function processEvents(events) {
+      const byCrn = new Map();
+
+      for (const e of events) {
+        if (!e.crn || !e.start || !e.end) continue;
+        if (!shouldIncludeMeeting(e)) continue;
+
+        const key = String(e.crn);
+        if (!byCrn.has(key)) {
+          byCrn.set(key, {
+            term: e.term || "",
+            crn: key,
+            subject: e.subject || "",
+            courseNumber: e.courseNumber || "",
+            title: cleanTitle(e.title, e.subject || "", e.courseNumber || ""),
+            meetings: []
+          });
+        }
+
+        const start = parseDate(e.start);
+        const end = parseDate(e.end);
+        const dayIdx = start.getDay(); // 0 = Sun
+        const dayName = DAY_NAMES[dayIdx];
+        const startStr = formatTime(start);
+        const endStr = formatTime(end);
+
+        const course = byCrn.get(key);
+        const exists = course.meetings.some(
+          (m) => m.day === dayName && m.start === startStr && m.end === endStr
+        );
+        if (!exists) {
+          course.meetings.push({
+            dayIdx,
+            day: dayName,
+            start: startStr,
+            end: endStr
+          });
+        }
+      }
+
+      const rows = [];
+      rows.push(["Term", "CRN", "Subject", "Course", "Title", "Meetings"]);
+
+      for (const course of byCrn.values()) {
+        const meetingsSorted = course.meetings.slice().sort((a, b) => {
+          if (a.dayIdx !== b.dayIdx) return a.dayIdx - b.dayIdx;
+          return a.start.localeCompare(b.start);
+        });
+
+        const meetingsStr = meetingsSorted
+          .map((m) => `${m.day} ${m.start}-${m.end}`)
+          .join("; ");
+
+        rows.push([
+          String(course.term),
+          String(course.crn),
+          String(course.subject),
+          String(course.courseNumber),
+          String(course.title),
+          meetingsStr
+        ]);
+      }
+
+      return rows;
+    }
+
+    function rowsToCsv(rows) {
+      return rows
+        .map((r) =>
+          r
+            .map((v) => {
+              const s = String(v ?? "");
+              // Escape quotes
+              return '"' + s.replace(/"/g, '""') + '"';
+            })
+            .join(",")
+        )
+        .join("\n");
+    }
+
+    function extractEventsFromHar(harObj) {
+      const log = harObj && harObj.log;
+      const entries = log && Array.isArray(log.entries) ? log.entries : [];
+      for (const entry of entries) {
+        const content = entry.response && entry.response.content;
+        const text = content && content.text;
+        if (!text) continue;
+        try {
+          const data = JSON.parse(text);
+          if (Array.isArray(data) && data.length && typeof data[0] === "object") {
+            // Heuristic: has crn/subject/courseNumber
+            const hasRegistrationShape = data.every((ev) =>
+              ev && (("crn" in ev) || ("subject" in ev) || ("courseNumber" in ev))
+            );
+            if (hasRegistrationShape) {
+              return data;
+            }
+          }
+        } catch (err) {
+          // ignore parse errors
+        }
+      }
+      throw new Error("Could not find registration JSON array inside HAR file.");
+    }
+
+    function parseInputJson(text) {
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) {
+        return data; // already events
+      }
+      if (data && typeof data === "object" && data.log) {
+        return extractEventsFromHar(data);
+      }
+      throw new Error(
+        "Input JSON is neither a registration events array nor a HAR file."
+      );
+    }
+
+    function downloadCsv(csv, filename = "schedule.csv") {
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    convertBtn.addEventListener("click", () => {
+      if (!selectedFile) {
+        setStatus("No file selected.", "error");
+        return;
+      }
+
+      convertBtn.disabled = true;
+      setStatus("Reading file and generating CSV…", "muted");
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const text = reader.result;
+          const events = parseInputJson(text);
+          const rows = processEvents(events);
+          if (rows.length <= 1) {
+            throw new Error("No courses found in data.");
+          }
+          const csv = rowsToCsv(rows);
+          lastCsv = csv;
+          lastCourseCount = rows.length - 1;
+
+          // Preview (first ~15 lines)
+          const lines = csv.split("\n");
+          const previewLines = lines.slice(0, 15).join("\n");
+          previewText.textContent = previewLines;
+          previewMeta.textContent = `${lastCourseCount} courses · ${lines.length} lines`;
+
+          downloadCsv(csv);
+          setStatus(
+            `Success! Downloaded schedule.csv with ${lastCourseCount} courses.`,
+            "ok"
+          );
+        } catch (err) {
+          console.error(err);
+          setStatus(`Error: ${err.message}`, "error");
+          previewText.textContent =
+            "# Error while converting file. See status message above.";
+          previewMeta.textContent = "0 courses · 0 lines";
+        } finally {
+          convertBtn.disabled = !selectedFile;
+        }
+      };
+      reader.onerror = () => {
+        setStatus("Failed to read file.", "error");
+        convertBtn.disabled = !selectedFile;
+      };
+
+      reader.readAsText(selectedFile, "utf-8");
+    });
+  </script>
+</body>
+</html>
