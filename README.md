@@ -1,4 +1,5 @@
 # DuckWeb Registration JSON → CSV Converter
+**[DuckWeb Registration JSON → CSV Converter (Web Version)](https://majornimrod.github.io/DuckWeb-Registration-JSON-CSV-Converter/)**
 
 This tool converts the **DuckWeb weekly registration JSON** (the data behind your schedule) into a clean, Excel/Google Sheets–ready **CSV schedule** — with:
 
