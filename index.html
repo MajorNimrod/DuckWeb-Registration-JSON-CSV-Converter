@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <title>DuckWeb Schedule → CSV</title>
+  <title>DuckWeb Schedule → CSV & Group Availability</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -14,6 +15,10 @@
       --muted: #9ca3af;
       --danger: #f97373;
       --radius-lg: 18px;
+
+      --slot-bg: #022c22;
+      --slot-border: #064e3b;
+      --slot-empty: #111827;
     }
 
     * {
@@ -35,7 +40,7 @@
 
     .app {
       width: 100%;
-      max-width: 780px;
+      max-width: 960px;
       background: rgba(15, 23, 42, 0.95);
       border-radius: 24px;
       box-shadow:
@@ -263,6 +268,31 @@
       color: var(--text);
     }
 
+    .btn-mini {
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .btn-mini:hover {
+      background: rgba(30, 64, 175, 0.7);
+      color: var(--text);
+    }
+
+    .btn-mini-danger {
+      border-color: rgba(248, 113, 113, 0.7);
+      color: #fecaca;
+    }
+
+    .btn-mini-danger:hover {
+      background: rgba(127, 29, 29, 0.9);
+      color: #fee2e2;
+    }
+
     .status {
       min-height: 20px;
       font-size: 0.82rem;
@@ -302,9 +332,10 @@
       padding: 10px 10px 8px;
       font-size: 0.78rem;
       color: var(--muted);
-      max-height: 140px;
+      max-height: 160px;
       overflow: auto;
       white-space: pre;
+      margin-bottom: 12px;
     }
 
     .preview-heading {
@@ -334,17 +365,193 @@
     .footer a:hover {
       text-decoration: underline;
     }
+
+    /* Members panel */
+    .members-card h3 {
+      margin: 0 0 6px;
+      font-size: 0.95rem;
+    }
+
+    .members-card p {
+      margin: 0 0 6px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .members-empty {
+      font-size: 0.8rem;
+      color: var(--muted);
+      padding: 6px 0;
+    }
+
+    .members-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      margin-top: 4px;
+    }
+
+    .members-table th,
+    .members-table td {
+      padding: 4px 6px;
+      border-bottom: 1px solid rgba(55, 65, 81, 0.6);
+      text-align: left;
+    }
+
+    .members-table th {
+      font-weight: 600;
+      color: #cbd5f5;
+    }
+
+    .members-table td.actions {
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    /* Availability grid */
+    .availability-card h3 {
+      margin: 0 0 6px;
+      font-size: 0.95rem;
+    }
+
+    .availability-card p {
+      margin: 0 0 6px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .availability-legend {
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .legend-swatch {
+      width: 13px;
+      height: 13px;
+      border-radius: 3px;
+      border: 1px solid rgba(75, 85, 99, 0.8);
+    }
+
+    .grid-wrapper {
+      max-height: 320px;
+      overflow: auto;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(55, 65, 81, 0.8);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .availability-grid {
+      display: grid;
+      grid-template-columns: 70px repeat(5, minmax(0, 1fr));
+      font-size: 0.72rem;
+      min-width: 520px;
+    }
+
+    .grid-header-cell,
+    .grid-time-cell,
+    .grid-slot {
+      padding: 4px 4px;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+      border-right: 1px solid rgba(31, 41, 55, 0.9);
+      text-align: center;
+    }
+
+    .grid-header-cell {
+      position: sticky;
+      top: 0;
+      background: rgba(15, 23, 42, 0.98);
+      z-index: 2;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .grid-time-cell {
+      text-align: right;
+      padding-right: 6px;
+      font-variant-numeric: tabular-nums;
+      background: rgba(15, 23, 42, 0.98);
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      color: #9ca3af;
+    }
+
+    .grid-slot {
+      cursor: default;
+      user-select: none;
+      border-radius: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .slot-empty {
+      background: var(--slot-empty);
+      color: #4b5563;
+    }
+
+    .slot-level-0 {
+      background: #0b1120;
+      color: #4b5563;
+    }
+
+    .slot-level-1 {
+      background: #022c22;
+      border-color: #064e3b;
+      color: #6ee7b7;
+    }
+
+    .slot-level-2 {
+      background: #064e3b;
+      border-color: #047857;
+      color: #a7f3d0;
+    }
+
+    .slot-level-3 {
+      background: #047857;
+      border-color: #059669;
+      color: #ecfdf5;
+    }
+
+    .slot-level-4 {
+      background: #059669;
+      border-color: #10b981;
+      color: #ecfdf5;
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.4);
+    }
+
+    .slot-max {
+      background: #16a34a;
+      border-color: #22c55e;
+      color: #ecfdf5;
+      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.55);
+    }
+
+    .slot-highlight:hover {
+      outline: 1px solid rgba(248, 250, 252, 0.2);
+    }
+
+    .muted-note {
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
   </style>
 </head>
+
 <body>
   <div class="app">
     <header class="app-header">
       <div class="title-group">
         <h1><span class="logo-dot"></span>DuckWeb Schedule → CSV</h1>
         <div class="subtitle">
-          Drop your <code>.json</code> or <code>.har</code> from the registration page and get a clean CSV. 
+          Drop your <code>.json</code> or <code>.har</code> from the registration page and get a clean CSV.
           <b>
-            Note: I do not own any rights to DuckWeb and I am only a student at UO. This is ONLY for educational purposes.
+            Note: I do not own any rights to DuckWeb and I am only a student at UO. This is ONLY for educational
+            purposes.
           </b>
         </div>
       </div>
@@ -353,7 +560,8 @@
 
     <section class="card">
       <h2>How it works</h2>
-      <p>This tool converts your DuckWeb registration data into a spreadsheet-friendly CSV.</p>
+      <p>This tool converts your DuckWeb registration data into a spreadsheet-friendly CSV, and can combine multiple
+        people’s schedules into a when2meet-style availability grid.</p>
       <div class="steps">
         <div>
           <strong>1. Export from DuckWeb</strong>
@@ -368,22 +576,22 @@
           <strong>2. Convert here</strong>
           <ol>
             <li>Select your <code>.har</code> or raw <code>.json</code></li>
-            <li>Click <strong>Convert to CSV</strong></li>
-            <li>Open the downloaded <code>schedule.csv</code> in Excel / Sheets</li>
+            <li>Click <strong>Convert to CSV</strong> to add a member</li>
+            <li>Repeat for each person, then scroll to see group availability</li>
           </ol>
         </div>
       </div>
     </section>
 
     <section class="upload-card">
-      <label class="dropzone" id="dropzone">
+      <div class="dropzone" id="dropzone">
         <input type="file" id="fileInput" class="file-input" accept=".har,.json,application/json" />
         <div class="drop-main">
           <span class="primary">Click to choose a file</span> or drag & drop
         </div>
         <div class="drop-sub">Use <code>schedule.har</code> (recommended) or raw registration <code>.json</code>.</div>
         <div class="drop-hint" id="fileNameHint">No file selected yet.</div>
-      </label>
+      </div>
 
       <div class="side-info">
         <div><strong>What this does:</strong></div>
@@ -392,16 +600,21 @@
           <li>Filters out long exam-style blocks (&gt;= 119 minutes)</li>
           <li>Cleans titles like <code>+ Dis</code> / <code>+ Lab</code> so Excel doesn’t treat them as formulas</li>
           <li>Formats times like <code>Mon 1:00 PM-1:50 PM</code></li>
+          <li>Builds a shared availability grid across all added members</li>
         </ul>
       </div>
     </section>
 
     <div class="btn-row">
       <button class="btn btn-secondary" type="button" id="resetBtn">Reset</button>
+      <button class="btn btn-secondary" type="button" id="combinedBtn" disabled>
+        Download Combined CSV
+      </button>
       <button class="btn btn-primary" type="button" id="convertBtn" disabled>
-        Convert to CSV
+        Convert to CSV & Add Member
       </button>
     </div>
+
 
     <div class="status" id="status">
       <span class="status-muted">Waiting for a <code>.har</code> or <code>.json</code> file…</span>
@@ -415,6 +628,35 @@
       <pre id="previewText"># CSV preview will appear here after conversion.</pre>
     </div>
 
+    <section class="card members-card">
+      <h3>Members / Schedules</h3>
+      <p>Each time you click <b>Convert to CSV &amp; Add Member</b>, that schedule is added here and a separate CSV is
+        downloaded.</p>
+      <div id="membersList" class="members-list">
+        <!-- Members table populated by JS -->
+      </div>
+    </section>
+
+    <section class="card availability-card">
+      <h3>Group Availability (when2meet-style)</h3>
+      <p>Shows how many added members are free at each time (Mon–Fri, 30-minute slots, 8:00 AM–8:00 PM).</p>
+      <div class="availability-legend">
+        <span>Legend:</span>
+        <span><span class="legend-swatch slot-level-1"></span> Some free</span>
+        <span><span class="legend-swatch slot-level-3"></span> Many free</span>
+        <span><span class="legend-swatch slot-max"></span> Everyone free</span>
+      </div>
+      <div class="grid-wrapper">
+        <div id="availabilityGrid" class="availability-grid">
+          <!-- Availability grid populated by JS -->
+        </div>
+      </div>
+      <div class="muted-note">
+        Tip: hover over a cell to see “X / N available”. Time range / resolution can be tweaked in the script
+        (GRID_START_HOUR, GRID_END_HOUR, SLOT_MINUTES).
+      </div>
+    </section>
+
     <footer class="footer">
       <span>All processing happens locally in your browser.</span>
       <span>Built for DuckWeb-style registration JSON.&nbsp;</span>
@@ -426,18 +668,29 @@
     const MAX_DURATION_MINUTES = 119;
     const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+    // Availability grid config (like when2meet)
+    const GRID_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+    const GRID_START_HOUR = 8;   // 8 AM
+    const GRID_END_HOUR = 20;    // 8 PM (exclusive)
+    const SLOT_MINUTES = 30;     // 30-minute blocks
+
     const dropzone = document.getElementById("dropzone");
     const fileInput = document.getElementById("fileInput");
     const convertBtn = document.getElementById("convertBtn");
     const resetBtn = document.getElementById("resetBtn");
+    const combinedBtn = document.getElementById("combinedBtn");
     const statusEl = document.getElementById("status");
     const fileNameHint = document.getElementById("fileNameHint");
     const previewText = document.getElementById("previewText");
     const previewMeta = document.getElementById("previewMeta");
+    const membersListEl = document.getElementById("membersList");
+    const availabilityGridEl = document.getElementById("availabilityGrid");
 
     let selectedFile = null;
     let lastCsv = "";
     let lastCourseCount = 0;
+    let members = [];
+    let nextMemberId = 1;
 
     function setStatus(message, type) {
       statusEl.innerHTML = "";
@@ -453,13 +706,21 @@
       selectedFile = null;
       lastCsv = "";
       lastCourseCount = 0;
+      members = [];
+      nextMemberId = 1;
+
       fileInput.value = "";
       fileNameHint.textContent = "No file selected yet.";
       convertBtn.disabled = true;
+      combinedBtn.disabled = true;
       setStatus("Waiting for a .har or .json file…", "muted");
       previewText.textContent = "# CSV preview will appear here after conversion.";
       previewMeta.textContent = "0 courses · 0 lines";
+
+      renderMembersList();
+      renderAvailabilityGrid();
     }
+
 
     resetBtn.addEventListener("click", resetState);
 
@@ -480,7 +741,7 @@
       });
     });
 
-    // caused the fileinput to open window twice.
+    // NOTE: The click-on-dropzone behavior that caused double-open is still disabled.
     // dropzone.addEventListener("click", () => fileInput.click());
 
     dropzone.addEventListener("drop", (e) => {
@@ -489,6 +750,11 @@
       if (file) {
         handleFileSelected(file);
       }
+    });
+
+    dropzone.addEventListener("click", () => {
+      // single open only (was causing double before when also bound to input)
+      fileInput.click();
     });
 
     fileInput.addEventListener("change", (e) => {
@@ -502,7 +768,7 @@
       selectedFile = file;
       fileNameHint.textContent = `Selected: ${file.name}`;
       convertBtn.disabled = false;
-      setStatus("File ready. Click “Convert to CSV” to process.", "ok");
+      setStatus("File ready. Click “Convert to CSV & Add Member” to process.", "ok");
     }
 
     // --- Core logic ---
@@ -681,6 +947,192 @@
       URL.revokeObjectURL(url);
     }
 
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function makeSafeFileName(name) {
+      const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+      return base || "schedule";
+    }
+
+    // Build a "busy" slot set for one member, at SLOT_MINUTES resolution.
+    function buildBusySet(events) {
+      const busy = new Set();
+      for (const e of events) {
+        if (!e.start || !e.end) continue;
+        if (!shouldIncludeMeeting(e)) continue;
+
+        const start = parseDate(e.start);
+        const end = parseDate(e.end);
+        let t = new Date(start.getTime());
+
+        // step in SLOT_MINUTES increments
+        while (t < end) {
+          const dayName = DAY_NAMES[t.getDay()];
+          const hour = t.getHours().toString().padStart(2, "0");
+          const minute = t.getMinutes().toString().padStart(2, "0");
+          const key = `${dayName}|${hour}:${minute}`;
+          busy.add(key);
+          t = new Date(t.getTime() + SLOT_MINUTES * 60 * 1000);
+        }
+      }
+      return busy;
+    }
+
+    // --- Members UI ---
+
+    function renderMembersList() {
+      if (!members.length) {
+        membersListEl.innerHTML = '<div class="members-empty">No members added yet. Upload a file and click “Convert to CSV &amp; Add Member”.</div>';
+        return;
+      }
+
+      let html = `
+        <table class="members-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Member</th>
+              <th>Source File</th>
+              <th>Courses</th>
+              <th class="actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      members.forEach((m, idx) => {
+        html += `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${escapeHtml(m.name)}</td>
+            <td>${escapeHtml(m.fileName)}</td>
+            <td>${m.courseCount}</td>
+            <td class="actions">
+              <button class="btn-mini" data-download-id="${m.id}">Download CSV</button>
+              <button class="btn-mini btn-mini-danger" data-remove-id="${m.id}">Remove</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += "</tbody></table>";
+      membersListEl.innerHTML = html;
+    }
+
+    membersListEl.addEventListener("click", (e) => {
+      const downloadId = e.target.getAttribute("data-download-id");
+      const removeId = e.target.getAttribute("data-remove-id");
+
+      if (downloadId) {
+        const idNum = Number(downloadId);
+        const member = members.find((m) => m.id === idNum);
+        if (member) {
+          const safeName = makeSafeFileName(member.name || "schedule");
+          downloadCsv(member.csv, `${safeName}.csv`);
+        }
+      } else if (removeId) {
+        const idNum = Number(removeId);
+        members = members.filter((m) => m.id !== idNum);
+        renderMembersList();
+        renderAvailabilityGrid();
+        combinedBtn.disabled = members.length === 0; // 👈 add this line here
+      }
+
+    });
+
+    // --- Availability grid ---
+
+    function buildTimeSlots() {
+      const slots = [];
+      for (let h = GRID_START_HOUR; h < GRID_END_HOUR; h++) {
+        for (let m = 0; m < 60; m += SLOT_MINUTES) {
+          const hourStr = h.toString().padStart(2, "0");
+          const minStr = m.toString().padStart(2, "0");
+          slots.push({ hour: h, minute: m, keyTime: `${hourStr}:${minStr}` });
+        }
+      }
+      return slots;
+    }
+
+    const TIME_SLOTS = buildTimeSlots();
+
+    function formatTimeLabel(hour, minute) {
+      const dt = new Date();
+      dt.setHours(hour, minute, 0, 0);
+      return formatTime(dt);
+    }
+
+    function renderAvailabilityGrid() {
+      if (!members.length) {
+        availabilityGridEl.innerHTML = `
+          <div class="grid-time-cell" style="grid-column: 1 / -1; text-align:center; padding:8px;">
+            Add at least one member to see shared availability.
+          </div>
+        `;
+        return;
+      }
+
+      const total = members.length;
+
+      let html = "";
+
+      // Header row
+      html += `<div class="grid-header-cell"></div>`;
+      GRID_DAYS.forEach((day) => {
+        html += `<div class="grid-header-cell">${day}</div>`;
+      });
+
+      // For each time slot, add a row
+      for (const slot of TIME_SLOTS) {
+        const label = formatTimeLabel(slot.hour, slot.minute);
+        html += `<div class="grid-time-cell">${label}</div>`;
+
+        GRID_DAYS.forEach((day) => {
+          const key = `${day}|${slot.keyTime}`;
+          let unavailableCount = 0;
+          for (const m of members) {
+            if (m.busySet.has(key)) {
+              unavailableCount++;
+            }
+          }
+          const availableCount = total - unavailableCount;
+
+          let cls = "grid-slot slot-empty";
+          if (total > 0) {
+            const ratio = availableCount / total;
+            if (availableCount === 0) {
+              cls = "grid-slot slot-level-0";
+            } else if (availableCount === total) {
+              cls = "grid-slot slot-max slot-highlight";
+            } else if (ratio <= 0.25) {
+              cls = "grid-slot slot-level-1 slot-highlight";
+            } else if (ratio <= 0.5) {
+              cls = "grid-slot slot-level-2 slot-highlight";
+            } else if (ratio <= 0.75) {
+              cls = "grid-slot slot-level-3 slot-highlight";
+            } else {
+              cls = "grid-slot slot-level-4 slot-highlight";
+            }
+          }
+
+          const title = `${availableCount} / ${total} available`;
+
+          html += `<div class="${cls}" title="${title}">${availableCount > 0 ? availableCount : ""}</div>`;
+        });
+      }
+
+      availabilityGridEl.innerHTML = html;
+    }
+
+    // --- Convert button: add member + download CSV ---
+
     convertBtn.addEventListener("click", () => {
       if (!selectedFile) {
         setStatus("No file selected.", "error");
@@ -699,6 +1151,7 @@
           if (rows.length <= 1) {
             throw new Error("No courses found in data.");
           }
+
           const csv = rowsToCsv(rows);
           lastCsv = csv;
           lastCourseCount = rows.length - 1;
@@ -709,11 +1162,38 @@
           previewText.textContent = previewLines;
           previewMeta.textContent = `${lastCourseCount} courses · ${lines.length} lines`;
 
-          downloadCsv(csv);
+          // Build busy set for this member
+          const busySet = buildBusySet(events);
+
+          // Ask for member name
+          const defaultName = (selectedFile.name || "Member " + nextMemberId).replace(/\.(har|json)$/i, "");
+          const namePrompt = window.prompt("Member name for this schedule:", defaultName);
+          const memberName = (namePrompt && namePrompt.trim()) || defaultName;
+
+          const member = {
+            id: nextMemberId++,
+            name: memberName,
+            fileName: selectedFile.name,
+            courseCount: lastCourseCount,
+            csv,
+            rows,      // NEW: keep the structured rows
+            busySet
+          };
+
+          members.push(member);
+
+          // No auto-download here anymore
           setStatus(
-            `Success! Downloaded schedule.csv with ${lastCourseCount} courses.`,
+            `Success! Added ${memberName} (${lastCourseCount} courses). Use the table to download individual CSVs or the "Download Combined CSV" button for everyone.`,
             "ok"
           );
+
+          renderMembersList();
+          renderAvailabilityGrid();
+
+          // Enable combined download now that we have at least one member
+          combinedBtn.disabled = members.length === 0;
+
         } catch (err) {
           console.error(err);
           setStatus(`Error: ${err.message}`, "error");
@@ -724,6 +1204,7 @@
           convertBtn.disabled = !selectedFile;
         }
       };
+
       reader.onerror = () => {
         setStatus("Failed to read file.", "error");
         convertBtn.disabled = !selectedFile;
@@ -731,6 +1212,49 @@
 
       reader.readAsText(selectedFile, "utf-8");
     });
+
+    // Initial render
+    renderMembersList();
+    renderAvailabilityGrid();
+
+    function buildCombinedCsv() {
+      if (!members.length) {
+        throw new Error("No members to combine.");
+      }
+
+      // Base header from processEvents
+      const baseHeader = ["Term", "CRN", "Subject", "Course", "Title", "Meetings"];
+      const header = ["Member", ...baseHeader];
+
+      const allRows = [header];
+
+      for (const m of members) {
+        if (!m.rows || m.rows.length <= 1) continue;
+        // Skip header row (index 0) for each member
+        for (const row of m.rows.slice(1)) {
+          allRows.push([m.name, ...row]);
+        }
+      }
+
+      return rowsToCsv(allRows);
+    }
+
+    combinedBtn.addEventListener("click", () => {
+      try {
+        if (!members.length) {
+          setStatus("No members added to combine.", "error");
+          return;
+        }
+
+        const csv = buildCombinedCsv();
+        downloadCsv(csv, "combined_schedule.csv");
+        setStatus("Downloaded combined_schedule.csv with all members.", "ok");
+      } catch (err) {
+        console.error(err);
+        setStatus(`Error building combined CSV: ${err.message}`, "error");
+      }
+    });
   </script>
 </body>
+
 </html>
