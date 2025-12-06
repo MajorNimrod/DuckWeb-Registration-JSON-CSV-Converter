@@ -480,7 +480,8 @@
       });
     });
 
-    dropzone.addEventListener("click", () => fileInput.click());
+    // caused the fileinput to open window twice.
+    // dropzone.addEventListener("click", () => fileInput.click());
 
     dropzone.addEventListener("drop", (e) => {
       const dt = e.dataTransfer;
